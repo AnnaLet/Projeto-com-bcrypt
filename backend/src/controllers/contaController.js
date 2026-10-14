@@ -1,5 +1,6 @@
 const ContaRepository = require('../repositories/contaRepository');
 const bcrypt = require('bcrypt'); // 👈 Importação da biblioteca
+const jwt = require('jsonwebtoken');
 
 // O COFRE: Rota de Cadastro
 const registrar = async (req, res) => {
@@ -37,7 +38,25 @@ const login = async (req, res) => {
     }
 
     // 3. Sucesso!
-    res.json({ mensagem: 'Login realizado com sucesso! Bem-vindo(a).' });
+    const token = jwt.sign(
+      { id: conta.id }, 
+      process.env.JWT_SECRET, 
+      { expiresIn: '1h' }
+    );
+
+    res.json({ 
+      mensagem: 'Login realizado com sucesso!', 
+      token: token 
+    });
+}
+    const verPerfil = async (req, res) => {
+    // O segurança (middleware) já fez o trabalho duro e pendurou o ID do usuário no "req"
+    const id = req.usuario_id;
+    
+    // Busca os dados completos no banco (reaproveitando a função do repositório)
+    const dadosUsuario = await ContaRepository.buscarContaPorId(id);
+    
+    res.json(dadosUsuario);
 };
 
-module.exports = { registrar, login };
+module.exports = { registrar, login, verPerfil};
